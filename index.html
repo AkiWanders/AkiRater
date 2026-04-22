@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#0d0d0d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Wax" />
-  <title>Wax — Album Rater</title>
+  <meta name="apple-mobile-web-app-title" content="AkiRater" />
+  <title>AkiRater — Album Rater</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
@@ -231,7 +231,7 @@
 <body>
 
 <nav>
-  <span class="nav-logo">WAX</span>
+  <span class="nav-logo">AkiRater</span>
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="showPage('rate')">Rate</button>
     <button class="tab-btn" onclick="showPage('log')">Log</button>
@@ -306,7 +306,7 @@ const BONUS = { id: 'meaning', label: 'Personal meaning', icon: '★' };
 
 let scores = {};
 let currentSort = 'recent';
-let log = JSON.parse(localStorage.getItem('wax_log') || '[]');
+let log = JSON.parse(localStorage.getItem('akirater_log') || localStorage.getItem('wax_log') || '[]');
 
 function buildCategories() {
   const el = document.getElementById('catList');
@@ -397,7 +397,7 @@ function saveEntry() {
   };
 
   log.unshift(entry);
-  localStorage.setItem('wax_log', JSON.stringify(log));
+  localStorage.setItem('akirater_log', JSON.stringify(log));
   resetForm();
   showToast('saved to log');
 }
@@ -417,7 +417,7 @@ function resetForm() {
 
 function deleteEntry(id) {
   log = log.filter(e => e.id !== id);
-  localStorage.setItem('wax_log', JSON.stringify(log));
+  localStorage.setItem('akirater_log', JSON.stringify(log));
   renderLog();
 }
 
