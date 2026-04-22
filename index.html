@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0d0d0d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Wax" />
+  <title>Wax — Album Rater</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.15);
+      --text: #f0ede6;
+      --muted: #6b6860;
+      --accent: #c8f060;
+      --accent-dim: rgba(200,240,96,0.12);
+      --red: #ff5047;
+      --amber: #ffb340;
+      --purple: #b09fff;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+
+    html { background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 14px; }
+    body { min-height: 100dvh; padding-bottom: 2rem; }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.25rem;
+      height: 52px;
+      background: rgba(13,13,13,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { font-family: var(--font-display); font-size: 26px; letter-spacing: 0.05em; color: var(--accent); }
+    .nav-tabs { display: flex; gap: 2px; }
+    .tab-btn {
+      padding: 6px 14px; border: none; background: none;
+      font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+      color: var(--muted); cursor: pointer; border-radius: 6px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      transition: all 0.15s;
+    }
+    .tab-btn.active { background: var(--accent-dim); color: var(--accent); }
+    .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.05); }
+
+    /* PAGES */
+    .page { display: none; padding: 1.5rem 1.25rem; max-width: 640px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* RATE PAGE */
+    .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
+    .field-group.full { grid-template-columns: 1fr; }
+    input[type="text"], select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+    }
+    input[type="text"]::placeholder { color: var(--muted); }
+    input[type="text"]:focus, select:focus { border-color: var(--border-strong); }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6860'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 28px; cursor: pointer; }
+    select option { background: #1e1e1e; }
+
+    .section-label {
+      font-size: 10px; font-weight: 500; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .cat-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 1rem; }
+    .cat-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.15s;
+    }
+    .cat-row.bonus { border-color: rgba(176,159,255,0.2); background: rgba(176,159,255,0.05); }
+    .cat-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+    .cat-name { flex: 1; font-size: 12px; color: var(--text); font-weight: 300; }
+    .score-btns { display: flex; gap: 4px; }
+    .score-btn {
+      width: 38px; height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface2);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px; font-weight: 500;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .score-btn:hover { border-color: var(--border-strong); color: var(--text); }
+    .score-btn.s0 { background: rgba(255,80,71,0.15); border-color: rgba(255,80,71,0.4); color: var(--red); }
+    .score-btn.s05 { background: rgba(255,179,64,0.15); border-color: rgba(255,179,64,0.4); color: var(--amber); }
+    .score-btn.s1 { background: rgba(200,240,96,0.12); border-color: rgba(200,240,96,0.4); color: var(--accent); }
+    .score-btn.sb { background: rgba(176,159,255,0.15); border-color: rgba(176,159,255,0.4); color: var(--purple); }
+
+    .bonus-label {
+      font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(176,159,255,0.6); margin: 10px 0 6px;
+      padding-top: 10px; border-top: 1px solid var(--border);
+    }
+
+    /* SCORE DISPLAY */
+    .score-display {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .score-number {
+      font-family: var(--font-display);
+      font-size: 64px; line-height: 1;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+    .score-number.legendary { color: var(--purple); }
+    .score-denom { font-size: 20px; color: var(--muted); margin-left: 4px; margin-bottom: 8px; }
+    .score-verdict { font-size: 11px; color: var(--muted); text-align: right; max-width: 160px; letter-spacing: 0.05em; line-height: 1.5; }
+
+    .progress-bar { height: 3px; background: var(--surface2); border-radius: 2px; margin-bottom: 1.25rem; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.3s ease; }
+
+    textarea {
+      width: 100%; min-height: 70px; resize: vertical;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--font-mono); font-size: 12px;
+      padding: 10px 12px; outline: none; margin-bottom: 10px;
+      transition: border-color 0.15s;
+    }
+    textarea::placeholder { color: var(--muted); }
+    textarea:focus { border-color: var(--border-strong); }
+
+    .save-btn {
+      width: 100%; padding: 12px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(200,240,96,0.25);
+      border-radius: 8px;
+      color: var(--accent);
+      font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .save-btn:hover { background: rgba(200,240,96,0.2); border-color: rgba(200,240,96,0.4); }
+    .save-btn:active { transform: scale(0.99); }
+
+    /* LOG PAGE */
+    .log-empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 12px; letter-spacing: 0.05em; }
+    .log-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+    .stat-val { font-family: var(--font-display); font-size: 28px; color: var(--accent); letter-spacing: 0.05em; }
+    .stat-lbl { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+
+    .sort-bar { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .sort-btn {
+      padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px;
+      background: none; color: var(--muted);
+      font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.12s;
+    }
+    .sort-btn.active { border-color: var(--border-strong); color: var(--text); background: var(--surface); }
+
+    .album-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 8px;
+      transition: border-color 0.15s;
+      position: relative;
+    }
+    .album-card:hover { border-color: var(--border-strong); }
+    .album-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .album-title { font-family: var(--font-display); font-size: 20px; letter-spacing: 0.04em; line-height: 1.1; }
+    .album-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .album-score-badge {
+      font-family: var(--font-display); font-size: 22px; letter-spacing: 0.04em;
+      flex-shrink: 0; padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .badge-legendary { background: rgba(176,159,255,0.12); color: var(--purple); border: 1px solid rgba(176,159,255,0.25); }
+    .badge-high { background: rgba(200,240,96,0.1); color: var(--accent); border: 1px solid rgba(200,240,96,0.2); }
+    .badge-mid { background: rgba(255,179,64,0.1); color: var(--amber); border: 1px solid rgba(255,179,64,0.2); }
+    .badge-low { background: rgba(255,80,71,0.1); color: var(--red); border: 1px solid rgba(255,80,71,0.2); }
+    .album-notes { font-size: 11px; color: var(--muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.5; }
+    .album-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .genre-chip { font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 2px 9px; }
+    .del-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 4px 6px; border-radius: 4px; transition: all 0.12s; }
+    .del-btn:hover { color: var(--red); background: rgba(255,80,71,0.1); }
+
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(10px);
+      background: var(--surface2); border: 1px solid var(--border-strong);
+      border-radius: 8px; padding: 10px 18px;
+      font-size: 12px; color: var(--accent); letter-spacing: 0.05em;
+      opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 400px) {
+      .score-number { font-size: 52px; }
+      .field-group { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">WAX</span>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showPage('rate')">Rate</button>
+    <button class="tab-btn" onclick="showPage('log')">Log</button>
+  </div>
+</nav>
+
+<div id="page-rate" class="page active">
+  <div class="field-group">
+    <input type="text" id="albumTitle" placeholder="Album title" />
+    <input type="text" id="artistName" placeholder="Artist" />
+  </div>
+  <div class="field-group">
+    <input type="text" id="albumYear" placeholder="Year" />
+    <select id="albumGenre">
+      <option value="">Genre</option>
+      <option>Heavy metal</option>
+      <option>Thrash metal</option>
+      <option>Death metal</option>
+      <option>Black metal</option>
+      <option>Doom metal</option>
+      <option>Progressive metal</option>
+      <option>Hard rock</option>
+      <option>Classic rock</option>
+      <option>Punk rock</option>
+      <option>Post-rock</option>
+      <option>Other</option>
+    </select>
+  </div>
+
+  <div class="section-label">Rate — 0 / ½ / 1</div>
+  <div class="cat-list" id="catList"></div>
+
+  <div class="score-display">
+    <div style="display:flex;align-items:flex-end">
+      <span class="score-number" id="scoreNum">0</span>
+      <span class="score-denom" id="scoreDenom">/ 10</span>
+    </div>
+    <div class="score-verdict" id="scoreVerdict">start rating</div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <textarea id="notes" placeholder="Notes, standout tracks, first impressions..."></textarea>
+  <button class="save-btn" onclick="saveEntry()">↓ save to log</button>
+</div>
+
+<div id="page-log" class="page">
+  <div class="log-stats" id="logStats"></div>
+  <div class="sort-bar">
+    <button class="sort-btn active" data-sort="recent" onclick="setSort(this)">Recent</button>
+    <button class="sort-btn" data-sort="score" onclick="setSort(this)">Score</button>
+    <button class="sort-btn" data-sort="alpha" onclick="setSort(this)">A–Z</button>
+  </div>
+  <div id="logList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CATS = [
+  { id: 'songwriting', label: 'Songwriting & composition', icon: '✍' },
+  { id: 'lyrics', label: 'Lyrics & themes', icon: '📜' },
+  { id: 'atmosphere', label: 'Atmosphere & emotion', icon: '🌑' },
+  { id: 'cohesion', label: 'Cohesion & flow', icon: '🔗' },
+  { id: 'energy', label: 'Energy & dynamics', icon: '⚡' },
+  { id: 'technicality', label: 'Technicality & musicianship', icon: '🎸' },
+  { id: 'originality', label: 'Originality & identity', icon: '🔮' },
+  { id: 'production', label: 'Production & sound', icon: '🎚' },
+  { id: 'replay', label: 'Replay value & lasting impact', icon: '♻' },
+  { id: 'vocal', label: 'Vocal performance', icon: '🎤' },
+];
+const BONUS = { id: 'meaning', label: 'Personal meaning', icon: '★' };
+
+let scores = {};
+let currentSort = 'recent';
+let log = JSON.parse(localStorage.getItem('wax_log') || '[]');
+
+function buildCategories() {
+  const el = document.getElementById('catList');
+  el.innerHTML = '';
+  CATS.forEach(cat => el.appendChild(makeRow(cat, false)));
+  const bl = document.createElement('div');
+  bl.className = 'bonus-label';
+  bl.textContent = 'Bonus — personal meaning (pushes to 11/10)';
+  el.appendChild(bl);
+  el.appendChild(makeRow(BONUS, true));
+}
+
+function makeRow(cat, isBonus) {
+  const row = document.createElement('div');
+  row.className = 'cat-row' + (isBonus ? ' bonus' : '');
+  row.innerHTML = `
+    <span class="cat-icon">${cat.icon}</span>
+    <span class="cat-name">${cat.label}</span>
+    <div class="score-btns">
+      <button class="score-btn" data-id="${cat.id}" data-val="0" onclick="setScore('${cat.id}',0,${isBonus})">0</button>
+      <button class="score-btn" data-id="${cat.id}" data-val="0.5" onclick="setScore('${cat.id}',0.5,${isBonus})">½</button>
+      <button class="score-btn" data-id="${cat.id}" data-val="1" onclick="setScore('${cat.id}',1,${isBonus})">1</button>
+    </div>`;
+  return row;
+}
+
+function setScore(id, val, isBonus) {
+  scores[id] = scores[id] === val ? undefined : val;
+  refreshButtons(id, isBonus);
+  updateScore();
+}
+
+function refreshButtons(id, isBonus) {
+  document.querySelectorAll(`[data-id="${id}"]`).forEach(btn => {
+    btn.className = 'score-btn';
+    const v = parseFloat(btn.dataset.val);
+    if (scores[id] === v) {
+      if (isBonus) btn.classList.add('sb');
+      else if (v === 0) btn.classList.add('s0');
+      else if (v === 0.5) btn.classList.add('s05');
+      else btn.classList.add('s1');
+    }
+  });
+}
+
+function updateScore() {
+  let base = 0;
+  CATS.forEach(c => { if (scores[c.id] !== undefined) base += scores[c.id]; });
+  const bonus = scores[BONUS.id] || 0;
+  const total = base + bonus;
+  const max = bonus > 0 ? 11 : 10;
+
+  const sn = document.getElementById('scoreNum');
+  sn.textContent = total % 1 === 0 ? total : total.toFixed(1);
+  sn.className = 'score-number' + (total >= 10.5 ? ' legendary' : '');
+  document.getElementById('scoreDenom').textContent = '/ ' + max;
+
+  const pct = Math.min(100, (total / 11) * 100);
+  const pf = document.getElementById('progressFill');
+  pf.style.width = pct + '%';
+  pf.style.background = total >= 9.5 ? '#b09fff' : total >= 7 ? '#c8f060' : total >= 5 ? '#ffb340' : '#ff5047';
+
+  const verdicts = [[10.5,'legendary — a life album'],[9,'essential — near flawless'],[7.5,'great — well worth it'],[6,'good — solid but flawed'],[4,'mediocre — has its moments'],[2,'weak — mostly misses'],[-1,'skip it']];
+  const v = verdicts.find(x => total > x[0]);
+  document.getElementById('scoreVerdict').textContent = v ? v[1] : '...';
+}
+
+function saveEntry() {
+  const title = document.getElementById('albumTitle').value.trim();
+  const artist = document.getElementById('artistName').value.trim();
+  if (!title && !artist) { showToast('add a title or artist first'); return; }
+
+  let base = 0;
+  CATS.forEach(c => { if (scores[c.id] !== undefined) base += scores[c.id]; });
+  const bonus = scores[BONUS.id] || 0;
+  const total = base + bonus;
+
+  const entry = {
+    id: Date.now(),
+    title: title || '—',
+    artist: artist || '—',
+    year: document.getElementById('albumYear').value.trim(),
+    genre: document.getElementById('albumGenre').value,
+    score: total,
+    bonus: bonus > 0,
+    notes: document.getElementById('notes').value.trim(),
+    date: new Date().toISOString()
+  };
+
+  log.unshift(entry);
+  localStorage.setItem('wax_log', JSON.stringify(log));
+  resetForm();
+  showToast('saved to log');
+}
+
+function resetForm() {
+  ['albumTitle','artistName','albumYear','notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('albumGenre').value = '';
+  scores = {};
+  CATS.forEach(c => refreshButtons(c.id, false));
+  refreshButtons(BONUS.id, true);
+  document.getElementById('scoreNum').textContent = '0';
+  document.getElementById('scoreNum').className = 'score-number';
+  document.getElementById('scoreDenom').textContent = '/ 10';
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('scoreVerdict').textContent = 'start rating';
+}
+
+function deleteEntry(id) {
+  log = log.filter(e => e.id !== id);
+  localStorage.setItem('wax_log', JSON.stringify(log));
+  renderLog();
+}
+
+function badgeClass(score) {
+  if (score >= 9.5) return 'badge-legendary';
+  if (score >= 7) return 'badge-high';
+  if (score >= 4.5) return 'badge-mid';
+  return 'badge-low';
+}
+
+function setSort(btn) {
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentSort = btn.dataset.sort;
+  renderLog();
+}
+
+function renderLog() {
+  const total = log.length;
+  const avg = total ? (log.reduce((a,e) => a + e.score, 0) / total) : 0;
+  const top = total ? Math.max(...log.map(e => e.score)) : 0;
+
+  document.getElementById('logStats').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${total}</div><div class="stat-lbl">rated</div></div>
+    <div class="stat-card"><div class="stat-val">${avg.toFixed(1)}</div><div class="stat-lbl">avg score</div></div>
+    <div class="stat-card"><div class="stat-val">${top % 1 === 0 ? top : top.toFixed(1)}</div><div class="stat-lbl">highest</div></div>`;
+
+  const el = document.getElementById('logList');
+  if (!total) { el.innerHTML = '<div class="log-empty">no albums rated yet</div>'; return; }
+
+  let sorted = [...log];
+  if (currentSort === 'score') sorted.sort((a,b) => b.score - a.score);
+  else if (currentSort === 'alpha') sorted.sort((a,b) => a.title.localeCompare(b.title));
+
+  el.innerHTML = sorted.map(e => `
+    <div class="album-card">
+      <div class="album-card-top">
+        <div>
+          <div class="album-title">${e.title}</div>
+          <div class="album-meta">${e.artist}${e.year ? ' · ' + e.year : ''}</div>
+        </div>
+        <span class="album-score-badge ${badgeClass(e.score)}">${e.score % 1 === 0 ? e.score : e.score.toFixed(1)}${e.bonus ? ' ★' : ''}</span>
+      </div>
+      ${e.notes ? `<div class="album-notes">${e.notes}</div>` : ''}
+      <div class="album-card-footer">
+        ${e.genre ? `<span class="genre-chip">${e.genre}</span>` : '<span></span>'}
+        <button class="del-btn" onclick="deleteEntry(${e.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelector(`[onclick="showPage('${id}')"]`).classList.add('active');
+  if (id === 'log') renderLog();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+buildCategories();
+updateScore();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
